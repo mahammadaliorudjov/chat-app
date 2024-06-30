@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
+<head>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=9" />
+    <title>Вход</title>
+    <link rel="stylesheet" type="text/css" th:href="@{loginstyle.css}" />
+</head>
+<body>
+    <div class="login-container">
+        <h2>Вход</h2>
+        <form th:action="@{/login}" method="post">
+            <div>
+                <input type="text" name="username" placeholder="Имя пользователя"/>
+            </div>
+            <div>
+                <input type="password" name="password" placeholder="Пароль"/>
+            </div>
+            <div class="error" th:if="${param.error}">
+                Неправильное имя пользователя или пароль.
+            </div>
+            <div class="error" th:if="${param.logout}">
+                Вы вышли из своей учетной записи.
+            </div>
+            <button type="submit" class="login-button">Войти</button>
+        </form>
+    </div>
+    <div class="registration-container">
+        <p>Нет учетной записи?</p>
+        <form th:action="@{/registration}" method="get">
+            <button type="submit" class="register-button">Зарегистрироваться</button>
+        </form>
+    </div>
+    <script>
+        window.addEventListener('load', function() {
+            sessionStorage.clear();
+        });
+    </script>
+</body>
+</html>
