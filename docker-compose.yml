@@ -13,7 +13,7 @@ services:
       - db_data:/var/lib/mysql
 
   app:
-    image: chat-app
+    image: katarro1/chat-app
     container_name: chatapp
     depends_on:
       - db
@@ -31,3 +31,4 @@ services:
 
 volumes:
   db_data:
+
