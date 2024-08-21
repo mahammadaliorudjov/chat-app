@@ -1,6 +1,7 @@
 package com.example.chatapp.message;
 
 import com.example.chatapp.directmessages.DirectMessageService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
@@ -13,7 +14,7 @@ import java.util.List;
 public class MessageService {
     private final MessageRepository messageRepository;
     private final DirectMessageService directMessageService;
-
+    @Transactional
     public Message save(Message message) throws MessageServiceException {
         var chatId = directMessageService.getDirectMessageId(
                 message.getSenderId(),
