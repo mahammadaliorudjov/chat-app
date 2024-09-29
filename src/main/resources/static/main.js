@@ -10,10 +10,10 @@ const userSearchInput = document.querySelector('#userSearchInput');
 let stompClient = null;
 let nickname = null;
 let selectedUserId = null;
+let pingInterval;
 
 document.addEventListener('DOMContentLoaded', function() {
     nickname = sessionStorage.getItem('username');
-    console.log("nickname: ", nickname);
     if (!nickname) {
         const usernameElement = document.getElementById('username');
         if (usernameElement) {
@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    sendUserStatus(nickname, 'online');
     connect(nickname, sessionId);
 });
 
@@ -41,17 +42,49 @@ function connect(nickname, sessionId) {
     if (nickname) {
         const socket = new SockJS('/ep');
         stompClient = Stomp.over(socket);
-        stompClient.connect({ 'X-Session-ID': sessionId, 'X-Username': nickname }, onConnected, onError);
+        stompClient.connect({ 'X-Session-ID': sessionId, 'X-Username': nickname }, () => {
+            onConnected(nickname, sessionId);
+            sendUserStatus(nickname, 'online');
+        }, onError);
     }
     event.preventDefault();
 }
 
-function onConnected() {
+function onConnected(nickname, sessionId) {
     stompClient.subscribe(`/user/${nickname}/queue/messages`, onMessageReceived);
     stompClient.subscribe(`/user/public`, onMessageReceived);
 
+    stompClient.subscribe('/topic/user-status', function (message) {
+        findAndDisplayUsers();
+    });
     document.querySelector('#connected-user-nickname').textContent = nickname;
     findAndDisplayUsers();
+}
+
+function sendUserStatus(nickname, status) {
+    if (stompClient) {
+        const sessionId = sessionStorage.getItem('sessionId');
+        stompClient.send('/app/user-status', {}, JSON.stringify({
+            username: nickname,
+            status: status,
+            sessionId: sessionId
+        }));
+    }
+}
+
+window.addEventListener('load', function() {
+    pingInterval = setInterval(function() {
+        sendUserPing();
+    }, 5000);
+});
+
+function sendUserPing() {
+    if (stompClient && stompClient.connected) {
+        stompClient.send('/app/user.ping', {}, JSON.stringify({
+            username: nickname,
+            sessionId: sessionStorage.getItem('sessionId')
+        }));
+    }
 }
 
 async function onMessageReceived(payload) {
@@ -96,18 +129,18 @@ async function findAndDisplayUsers() {
         document.getElementById('no-users-message').classList.add('hidden');
         allUsers.forEach(user => {
             const isOnline = connectedUsers.some(connectedUser => connectedUser.username === user.username);
-            appendUserElement(user, usersList, isOnline);
+            appendUserElement(user.username, usersList, isOnline);
         });
     }
 }
 
-function appendUserElement(user, usersList, isOnline) {
+function appendUserElement(username, usersList, isOnline) {
     const listItem = document.createElement('li');
     listItem.classList.add('user-item');
-    listItem.id = user.username;
+    listItem.id = username;
 
     const usernameSpan = document.createElement('span');
-    usernameSpan.textContent = user.username;
+    usernameSpan.textContent = username;
 
     const indicatorsContainer = document.createElement('div');
     indicatorsContainer.style.display = 'flex';
@@ -196,13 +229,14 @@ function sendMessage(event) {
         displayMessage(nickname, messageContent, chatMessage.timestamp);
         chatArea.scrollTop = chatArea.scrollHeight;
     }
+    messageInput.value = '';
     event.preventDefault();
 }
 
 function onLogout() {
     if (stompClient) {
         const sessionId = sessionStorage.getItem('sessionId');
-        stompClient.send("/app/user.disconnectUser", {}, JSON.stringify({ nickname: nickname, sessionId: sessionId }));
+        sendUserStatus(nickname, 'offline');
     }
     window.location.href = '/login';
 }

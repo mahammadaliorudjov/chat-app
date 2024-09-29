@@ -38,7 +38,7 @@ public class UserService {
     }
     @Transactional
     public void disconnect(User user){
-        var disconnectedUser = userRepository.findById(user.getUsername()).orElse(null);
+        User disconnectedUser = userRepository.findById(user.getUsername()).orElse(null);
         if (disconnectedUser != null) {
             disconnectedUser.setStatus(Status.OFFLINE);
             userRepository.save(disconnectedUser);

@@ -4,7 +4,7 @@
     <title>Registration</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=9" />
-    <link rel="stylesheet" type="text/css" th:href="@{registration.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/registration.css}" />
 </head>
 <body>
     <div class="container">
@@ -18,7 +18,7 @@
             </div>
             <input class="register-button" type="submit" value="Зарегистрироваться">
         </form>
-        <div th:if="${error}" style="color: red;">
+        <div th:if="${error}" class="error-message">
             <p th:text="${error}"></p>
         </div>
     </div>
